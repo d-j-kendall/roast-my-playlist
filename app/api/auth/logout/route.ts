@@ -6,7 +6,7 @@ import { cookies } from 'next/headers';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function POST(_request: Request) { // Use POST for actions like logout
   const cookieStore = cookies();
-  const sessionId = cookieStore.get('sessionId')?.value;
+  const sessionId = (await cookieStore).get('sessionId')?.value;
 
   if (sessionId) {
     try {
@@ -19,7 +19,7 @@ export async function POST(_request: Request) { // Use POST for actions like log
   }
 
   // Clear the session cookie regardless of KV success
-  cookieStore.set('sessionId', '', {
+  (await cookieStore).set('sessionId', '', {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     path: '/',

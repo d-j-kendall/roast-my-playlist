@@ -41,7 +41,7 @@ export async function GET(request: Request) {
     });
 
     // Set the session ID in a secure, HttpOnly cookie
-    cookies().set('sessionId', sessionId, {
+    (await cookies()).set('sessionId', sessionId, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
       path: '/',

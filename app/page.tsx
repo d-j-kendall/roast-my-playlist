@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { JSX, useState } from 'react';
 // Note: In a real Next.js app using TypeScript, this file would typically be
 // `app/page.tsx` or `pages/index.tsx`.
 // Ensure Tailwind CSS is set up in your Next.js project.

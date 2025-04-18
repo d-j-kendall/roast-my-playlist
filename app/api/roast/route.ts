@@ -14,7 +14,7 @@ interface SpotifyTokens {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function GET(_request: Request) {
   const cookieStore = cookies();
-  const sessionId = cookieStore.get('sessionId')?.value;
+  const sessionId = (await cookieStore).get('sessionId')?.value;
 
   if (!sessionId) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
@@ -27,7 +27,7 @@ export async function GET(_request: Request) {
     if (!sessionDataString) {
       // Session expired or invalid
       // Optionally clear the cookie here
-      cookieStore.delete('sessionId');
+      (await cookieStore).delete('sessionId');
       return NextResponse.json({ error: 'Session expired or invalid' }, { status: 401 });
     }
 
