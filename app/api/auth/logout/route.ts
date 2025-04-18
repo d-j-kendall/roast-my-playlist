@@ -3,7 +3,8 @@ import { kv } from '@vercel/kv';
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
-export async function POST(request: Request) { // Use POST for actions like logout
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function POST(_request: Request) { // Use POST for actions like logout
   const cookieStore = cookies();
   const sessionId = cookieStore.get('sessionId')?.value;
 

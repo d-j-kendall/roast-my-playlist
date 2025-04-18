@@ -11,8 +11,8 @@ interface SpotifyTokens {
     // Add other fields if needed (scope, token_type)
 }
 
-
-export async function GET(request: Request) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function GET(_request: Request) {
   const cookieStore = cookies();
   const sessionId = cookieStore.get('sessionId')?.value;
 
@@ -32,7 +32,8 @@ export async function GET(request: Request) {
     }
 
     const tokens: SpotifyTokens = JSON.parse(sessionDataString);
-    const accessToken = tokens.access_token;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const _accessToken = tokens.access_token;
 
     // --- Use the accessToken to call Spotify API ---
     // Example: Fetch user's top artists

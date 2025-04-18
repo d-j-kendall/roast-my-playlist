@@ -6,7 +6,9 @@ import { cookies } from 'next/headers'; // Use cookies for session ID
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get('code'); // Authorization code from Spotify
-  const state = searchParams.get('state'); // Optional state parameter for security
+  
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _state = searchParams.get('state'); // Optional state parameter for security
 
   // --- IMPORTANT: Add state verification here ---
   // Compare 'state' with a value stored before redirecting to Spotify

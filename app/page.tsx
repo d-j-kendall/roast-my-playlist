@@ -142,7 +142,7 @@ export default function App(): JSX.Element {
           Spotify Taste Analyzer
         </h1>
         <p className="text-lg sm:text-xl text-gray-300">
-          Discover the "truth" about your music choices...
+          Discover the &quot;truth&quot; about your music choices...
         </p>
       </header>
 
@@ -241,7 +241,7 @@ export default function App(): JSX.Element {
                     {resultType === 'roast' ? "The Harsh Truth:" : "The Comfortable Lie:"}
                  </h3>
                 <p className="text-lg text-white leading-relaxed">
-                  "{resultText}"
+                &quot;{resultText}&quot;
                 </p>
               </div>
             )}
@@ -280,13 +280,6 @@ export default function App(): JSX.Element {
           font-family: 'Inter', sans-serif;
         }
       `}</style>
-       {/* Include Inter font - This should ideally be in your layout file or _document.tsx */}
-       {/* Next.js 13+ App Router: Include in layout.tsx */}
-       {/* Next.js Pages Router: Include in _document.tsx */}
-       {/* For simplicity here, it's included directly, but avoid this in production */}
-       <link rel="preconnect" href="https://fonts.googleapis.com" />
-       <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
     </div>
   );
 }
