@@ -37,6 +37,7 @@ export async function GET(request : NextRequest) {
     // --- Use sessionData.access_token to call Spotify API ---
     try {
         const spotifyData = await fetchSpotifyData(sessionData.access_token);
+        console.log(spotifyData)
         const roastResult = await generateRoast(spotifyData, shouldRoast); // Your AI logic
         return NextResponse.json({ roast: roastResult });
     } catch (error) {
