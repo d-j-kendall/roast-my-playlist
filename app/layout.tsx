@@ -18,10 +18,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* Add Google Font links here */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+       {/* Updated Google Font Link for Poppins */}
+       <link rel="preconnect" href="https://fonts.googleapis.com" />
+       <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+       {/* Requesting weights 400 (regular), 600 (semibold), 700 (bold) */}
+       <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
       </head>
       {/* If using next/font, apply class here: <body className={inter.className}> */}
       <body>

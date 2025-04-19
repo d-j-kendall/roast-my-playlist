@@ -1,12 +1,13 @@
 // app/api/auth/callback/route.ts
-import { kv } from '@vercel/kv';
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers'; // Use cookies for session ID
+import { persistSession } from '../sessionManager';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get('code'); // Authorization code from Spotify
   
+  console.log(`Code: ${code}`);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const _state = searchParams.get('state'); // Optional state parameter for security
 
@@ -36,9 +37,10 @@ export async function GET(request: Request) {
 
     // Store tokens in Vercel KV, keyed by the session ID
     // Set an expiration time slightly less than Spotify's token expiry
-    await kv.set(`session:${sessionId}`, JSON.stringify(tokens), {
-      ex: tokens.expires_in - 300, // Expire 5 mins before Spotify token does
-    });
+    await persistSession(sessionId, tokens)
+    
+
+    console.log(`Session ID: ${sessionId}`);
 
     // Set the session ID in a secure, HttpOnly cookie
     (await cookies()).set('sessionId', sessionId, {
@@ -48,6 +50,8 @@ export async function GET(request: Request) {
       maxAge: tokens.expires_in, // Cookie lasts as long as the token
       // sameSite: 'lax', // Consider SameSite attribute
     });
+
+    console.log(`Cookie Set`)
 
     // Redirect user back to the main page
     return NextResponse.redirect(new URL('/', request.url));

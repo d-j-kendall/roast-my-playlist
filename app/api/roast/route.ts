@@ -1,79 +1,78 @@
-// app/api/roast/route.ts
-import { kv } from '@vercel/kv';
-import { NextResponse } from 'next/server';
+// Example: app/api/roast/route.ts (or any protected route)
+import { validateSession, refreshSessionToken } from '../auth/sessionManager'; // Adjust path
 import { cookies } from 'next/headers';
+import { NextRequest, NextResponse } from 'next/server';
+import { ISpotifyService, SpotifyTasteData } from '../lib/SpotifyService';
+import { RealSpotifyService } from '../lib/RealSpotifyService';
 
-// Define an interface for the expected token structure
-interface SpotifyTokens {
-    access_token: string;
-    refresh_token?: string; // Optional depending on your needs
-    expires_in: number;
-    // Add other fields if needed (scope, token_type)
-}
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function GET(_request: Request) {
-  const cookieStore = cookies();
-  const sessionId = (await cookieStore).get('sessionId')?.value;
+export async function GET(request : NextRequest) {
+  const sessionId = (await cookies()).get('sessionId')?.value;
 
   if (!sessionId) {
-    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  try {
-    // Retrieve session data from KV
-    const sessionDataString = await kv.get<string>(`session:${sessionId}`);
+  let sessionData = await validateSession(sessionId);
 
-    if (!sessionDataString) {
-      // Session expired or invalid
-      // Optionally clear the cookie here
-      (await cookieStore).delete('sessionId');
-      return NextResponse.json({ error: 'Session expired or invalid' }, { status: 401 });
+  // If session expired, try to refresh it
+  if (!sessionData) {
+     console.log(`[Roast API] Session expired for ${sessionId}, attempting refresh...`);
+     sessionData = await refreshSessionToken(sessionId);
+  }
+
+  // If still no valid session after potential refresh, return unauthorized
+  if (!sessionData) {
+     console.log(`[Roast API] Session refresh failed or invalid for ${sessionId}.`);
+     // Ensure cookie is cleared if refresh failed
+     (await cookies()).set('sessionId', '', { maxAge: -1, path: '/' });
+     return NextResponse.json({ error: 'Session expired or invalid' }, { status: 401 });
     }
 
-    const tokens: SpotifyTokens = JSON.parse(sessionDataString);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const _accessToken = tokens.access_token;
+    // --- Read Query Parameter ---
+    const searchParams = request.nextUrl.searchParams;
+    // Get the 'roast' parameter. If it's explicitly 'false', treat as false. Otherwise, default to true.
+    const shouldRoast = searchParams.get('roast') !== 'false';
+    console.log(`[Roast API] Request received. ShouldRoast: ${shouldRoast}`);
 
-    // --- Use the accessToken to call Spotify API ---
-    // Example: Fetch user's top artists
-    // const spotifyApiUrl = 'https://api.spotify.com/v1/me/top/artists?limit=5';
-    // const spotifyResponse = await fetch(spotifyApiUrl, {
-    //   headers: { 'Authorization': `Bearer ${accessToken}` }
-    // });
-    // if (!spotifyResponse.ok) {
-    //   // Handle potential token expiry/refresh logic here if needed
-    //   console.error('Spotify API error:', await spotifyResponse.text());
-    //   throw new Error('Failed to fetch data from Spotify');
-    // }
-    // const spotifyData = await spotifyResponse.json();
-    // --- End Spotify API Call ---
+    // --- Use sessionData.access_token to call Spotify API ---
+    try {
+        const spotifyData = await fetchSpotifyData(sessionData.access_token);
+        const roastResult = await generateRoast(spotifyData, shouldRoast); // Your AI logic
+        return NextResponse.json({ roast: roastResult });
+    } catch (error) {
+        // Handle errors during Spotify API call or AI generation
+        console.error("[Roast API] Error processing request:", error);
+        return NextResponse.json({ error: 'Failed to generate roast' }, { status: 500 });
+    }
+}
 
-    // --- Call your AI service with Spotify data ---
-    // const aiPrompt = `Roast the music taste based on these top artists: ${JSON.stringify(spotifyData.items)}`;
-    // const aiResponse = await fetch('YOUR_AI_SERVICE_ENDPOINT', { ... });
-    // const roastResult = await aiResponse.json();
-    // --- End AI Call ---
+async function fetchSpotifyData(accessToken: string) : Promise<SpotifyTasteData> { 
+    const spotifyService : ISpotifyService = new RealSpotifyService();
 
-    // Placeholder roast
-    const possibleRoasts: string[] = [
+    const tasteData = spotifyService.getCombinedTasteData(accessToken);
+    console.log(tasteData);
+    return tasteData;
+}
+
+async function generateRoast(data: SpotifyTasteData, roast: boolean) { 
+    const possibleCompliments: string[] = [
+        "Oh, how... *eclectic*. Your taste is certainly... unique. It's wonderful you're not afraid to listen to, well, *that*.",
+        "It's so brave of you to enjoy music that challenges conventional notions of 'good'. Truly inspiring.",
+        "Your playlists have a certain... charm. Like finding a dusty, forgotten cassette tape in your grandpa's attic. Quaint!",
+        "You clearly have a deep appreciation for sounds. All kinds of sounds. Even those ones.",
+        "Wow, you listen to [Popular Artist]? How wonderfully mainstream and accessible of you! It's great you fit in." // Example needs dynamic data later
+      ];
+
+      const randomCompliment: string = possibleCompliments[Math.floor(Math.random() * possibleCompliments.length)];
+
+      const possibleRoasts: string[] = [
         "Okay, your top artist is *that* obscure indie band? Trying a bit too hard to be different, aren't we? Bet you wear vintage clothes ironically.",
         "Wow, judging by your recently played, you exclusively listen to songs that were popular 15 years ago. Are you okay? Is this a cry for help?",
         "Your top genre is 'Sad Acoustic Folk Pop'? Let me guess, your favorite season is autumn and you own way too many plaid shirts.",
         "All these hyperpop tracks... Is your brain okay? It sounds like a dial-up modem having a seizure in a candy factory.",
         "Impressive! You managed to have zero overlapping artists with anyone considered 'cool' since 2005. It's almost an achievement."
       ];
-    const randomRoast: string = possibleRoasts[Math.floor(Math.random() * possibleRoasts.length)];
+      const randomRoast: string = possibleRoasts[Math.floor(Math.random() * possibleRoasts.length)];
 
-
-    return NextResponse.json({ roast: randomRoast }); // Send the result back to the frontend
-
-  } catch (error) {
-    console.error('Error fetching roast:', error);
-    // Check if the error is due to session expiry specifically
-    if (error instanceof Error && error.message.includes('Session expired')) {
-         return NextResponse.json({ error: 'Session expired, please log in again.' }, { status: 401 });
-    }
-    return NextResponse.json({ error: 'Failed to generate roast' }, { status: 500 });
-  }
-}
+      return roast ? randomRoast : randomCompliment;
+ }
