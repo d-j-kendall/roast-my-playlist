@@ -25,11 +25,39 @@ export async function GET(request: Request) {
     // const spotifyResponse = await fetch('https://accounts.spotify.com/api/token', { ... });
     // const tokens = await spotifyResponse.json();
     // Example placeholder tokens:
-    const tokens = {
-      access_token: 'dummy_access_token_' + Date.now(),
-      refresh_token: 'dummy_refresh_token_' + Date.now(),
-      expires_in: 3600, // Typically 1 hour
-    };
+    const clientId = process.env.SPOTIFY_CLIENT_ID;
+    const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
+    const redirectUri = process.env.SPOTIFY_REDIRECT_URI;
+
+    if (!clientId || !clientSecret || !redirectUri) {
+      console.error('Missing Spotify environment variables (SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, or SPOTIFY_REDIRECT_URI)');
+      return NextResponse.json(
+        { error: 'Server configuration error.' },
+        { status: 500 }
+      );
+    }
+
+    const spotifyResponse = await fetch('https://accounts.spotify.com/api/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': 'Basic ' + Buffer.from(`${clientId}:${clientSecret}`).toString('base64'),
+      },
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        code: code,
+        redirect_uri: redirectUri,
+      }),
+      cache: 'no-store',
+    });
+
+    if (!spotifyResponse.ok) {
+      const errorData = await spotifyResponse.json();
+      console.error('Spotify token exchange failed:', errorData);
+      return NextResponse.json({ error: 'Spotify token exchange failed' }, { status: spotifyResponse.status });
+    }
+
+    const tokens = await spotifyResponse.json();
     // --- End Spotify Token Exchange ---
 
     // Generate a unique session ID
