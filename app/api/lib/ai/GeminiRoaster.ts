@@ -22,7 +22,9 @@ export class GeminiRoaster implements Roaster {
     const genAI = new GoogleGenerativeAI(apiKey);
     // Using gemini-1.0-pro as gemini-2.0-flash is not a standard model name via this SDK usually
     // Check available models if needed: https://ai.google.dev/models/gemini
-    this.model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    this.model = genAI.getGenerativeModel({
+      model: "gemini-2.5-pro-exp-03-25",
+    });
   }
 
   // Updated to accept AnalysisInputData
@@ -36,32 +38,41 @@ export class GeminiRoaster implements Roaster {
 
     // Define the system instruction
     const systemInstruction = {
-      text: "You are 'Roastify Master', a savagely funny AI specializing in roasting people based on their Spotify listening habits. Your tone is brutal but lighthearted and ultimately entertaining. Be witty, use hyperbole, and make unexpected connections. Never be genuinely offensive, hateful, or discriminatory. Focus on the music taste provided in the user message.",
+      text:
+        "You are 'Roastify Master', a savagely funny AI specializing in roasting people based on their Spotify listening habits. " +
+        "Your tone is brutal. You are witty. You are ruthless. Use the tone on Kill Tony. " +
+        "Be witty, use hyperbole, and make unexpected connections. " +
+        "Focus on the music taste provided in the user message." +
+        "You need to keep the response original and users should not recieve similar responses. " +
+        "You can be slightly offensive and throw some real digs, but be able to back track in the event you stepped too far. " +
+        "Make sure you don't use the same introduction when roasting especially for users with similar tastes. " +
+        "Do not use the same introduction when roasting users, especially those with similar tastes." +
+        "Try to keep the output less than 1000 tokens",
     };
 
     // Define generation configuration
     const generationConfig = {
-      temperature: 0.8,
-      maxOutputTokens: 600, // Increased slightly
+      temperature: 0.95,
+      maxOutputTokens: 2000, // Increased slightly
     };
 
     // Define safety settings
     const safetySettings = [
       {
         category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-        threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+        threshold: HarmBlockThreshold.BLOCK_NONE,
       },
       {
         category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-        threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+        threshold: HarmBlockThreshold.BLOCK_NONE,
       },
       {
         category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-        threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+        threshold: HarmBlockThreshold.BLOCK_NONE,
       },
       {
         category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-        threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+        threshold: HarmBlockThreshold.BLOCK_NONE,
       },
     ];
 
@@ -84,16 +95,17 @@ export class GeminiRoaster implements Roaster {
 
       // Correctly access the response and text
       const response = result.response;
+      console.log(response);
       if (!response) {
         console.error(
           "[GeminiRoaster] Received undefined response from Gemini for roast."
         );
         throw new Error("Gemini response was undefined.");
       }
-      const text = response.text();
+      const text = response.candidates?.at(0)?.content?.parts?.at(0)?.text;
 
       console.log("[GeminiRoaster] Roast generated:", text);
-      return text;
+      return text ? text : "";
     } catch (error) {
       console.error(
         "[GeminiRoaster] Gemini API error during roast generation:",
@@ -112,12 +124,19 @@ export class GeminiRoaster implements Roaster {
     const userPromptText = this.constructUserPromptText(taste);
 
     const systemInstruction = {
-      text: "You are 'Patronizing Pal', an AI that gives compliments about Spotify listening habits. Your tone should be overly enthusiastic and slightly condescending, as if explaining something simple to a child. Use simple language, excessive praise for basic things, and subtle sarcasm that implies the user's taste is actually quite common or unimpressive, but phrase it like a genuine, if slightly clueless, compliment. Assume the user won't detect the underlying sarcasm. Avoid any genuinely mean or offensive language.",
+      text:
+        "You are 'Patronizing Pal', an AI that gives compliments about Spotify listening habits. " +
+        "Your tone should be overly enthusiastic and slightly condescending, as if explaining something simple to a child. " +
+        "Use simple language, excessive praise for basic things, " +
+        "and subtle sarcasm that implies the user's taste is actually quite common or unimpressive, " +
+        "but phrase it like a genuine, if slightly clueless, compliment. Assume the user won't detect the underlying sarcasm. " +
+        "Keep responses original, even for users with similar tastes. " +
+        "Try to keep the output less than 1000 tokens.",
     };
 
     const generationConfig = {
-      temperature: 0.7,
-      maxOutputTokens: 500,
+      temperature: 0.95,
+      maxOutputTokens: 2000,
     };
 
     const safetySettings = [

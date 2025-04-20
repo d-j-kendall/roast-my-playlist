@@ -1,6 +1,6 @@
 // lib/services/MockSpotifyService.ts
 import {
-  ISpotifyService,
+  MusicService,
   SpotifyArtist,
   SpotifyTasteData,
   SpotifyTrack,
@@ -12,7 +12,7 @@ import { AnalysisInputData } from "./AnalysisInput";
 // Helper function to simulate network delay
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-export class MockSpotifyService implements ISpotifyService {
+export class MockSpotifyService implements MusicService {
   async getUserProfile(accessToken: string): Promise<SpotifyUserProfile> {
     console.log("[MockSpotifyService] Fetching user profile...");
     await delay(150); // Simulate delay
@@ -229,7 +229,6 @@ export class MockSpotifyService implements ISpotifyService {
         .sort(([, countA], [, countB]) => countB - countA)
         .slice(0, 5) // Get top 5
         .map(([genre]) => genre);
-
     }
     return analysisInput;
   }

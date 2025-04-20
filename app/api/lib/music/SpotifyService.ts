@@ -28,8 +28,6 @@ export interface SpotifyUserProfile {
   uri: string;
 }
 
-
-
 // Type for combined Spotify data to be sent for analysis
 export interface SpotifyTasteData {
   profile?: SpotifyUserProfile; // Optional depending on your needs
@@ -39,7 +37,7 @@ export interface SpotifyTasteData {
   // Add more fields as needed
 }
 
-export interface ISpotifyService {
+export interface MusicService {
   /**
    * Fetches the profile information for the authenticated user.
    * Requires 'user-read-private' and potentially 'user-read-email' scopes.
