@@ -6,6 +6,8 @@ import {
     SpotifyTrack,
     SpotifyUserProfile,
   } from './SpotifyService'; // Adjust path as needed
+
+  import { AnalysisInputData } from './AnalysisInput';
   
   const SPOTIFY_API_BASE_URL = 'https://api.spotify.com/v1';
   
@@ -16,6 +18,8 @@ import {
       this.name = 'SpotifyApiError';
     }
   }
+
+  
   
   // Helper function to handle fetch requests and errors
   async function fetchSpotifyApi<T>(endpoint: string, accessToken: string): Promise<T> {
@@ -165,5 +169,71 @@ import {
            throw new Error(`Failed to fetch combined Spotify data: ${error instanceof Error ? error.message : String(error)}`);
       }
     }
+
+    async prepareAnalysisData(
+        accessToken: string,
+        trackLimit: number = 5, // Fetch fewer items
+        artistLimit: number = 5,
+        recentlyPlayedLimit: number = 40,  // Fetch fewer items
+      ): Promise<AnalysisInputData> {
+        console.log('[RealSpotifyService] Preparing analysis data...');
+        try {
+          // Fetch only the necessary data, potentially with lower limits
+          //eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const [profile, topTracks, topArtists, recentlyPlayed] = await Promise.all([
+            // Only fetch profile if needed for the prompt
+            this.getUserProfile(accessToken).catch(e => { console.error("Failed to get profile:", e); return null; }),
+            this.getUserTopTracks(accessToken, trackLimit, 'medium_term').catch(e => { console.error("Failed to get top tracks:", e); return []; }),
+            this.getUserTopArtists(accessToken, artistLimit, 'medium_term').catch(e => { console.error("Failed to get top artists:", e); return []; }),
+            this.getRecentlyPlayed(accessToken, recentlyPlayedLimit).catch(e => { console.error("Failed to get recently played:", e); return []; }),
+          ]);
+    
+          // Transform the data into the lean format
+          const analysisInput: AnalysisInputData = {};
+    
+          if (profile) {
+            analysisInput.profile = { display_name: profile.display_name };
+          }
+    
+          if (topTracks.length > 0) {
+            analysisInput.topTracks = topTracks.map(track => ({
+              name: track.name,
+              artists: track.artists.map(artist => artist.name), // Just names
+            }));
+          }
+    
+          let allGenres: string[] = [];
+          if (topArtists.length > 0) {
+            analysisInput.topArtists = topArtists.map(artist => {
+              allGenres = allGenres.concat(artist.genres); // Collect genres
+              return {
+                name: artist.name,
+                genres: artist.genres, // Keep genres for context
+              };
+            });
+    
+            // Optional: Extract and count top genres
+            const genreCounts = allGenres.reduce((acc, genre) => {
+              acc[genre] = (acc[genre] || 0) + 1;
+              return acc;
+            }, {} as Record<string, number>);
+    
+            // Get top N genres (e.g., top 5)
+            analysisInput.topGenres = Object.entries(genreCounts)
+              .sort(([, countA], [, countB]) => countB - countA)
+              .slice(0, 5) // Get top 5
+              .map(([genre]) => genre);
+          }
+    
+          console.log('[RealSpotifyService] Prepared Analysis Data:', analysisInput);
+          return analysisInput;
+    
+        } catch (error) {
+          console.error('[RealSpotifyService] Error preparing analysis data:', error);
+          throw new Error(`Failed to prepare analysis data: ${error instanceof Error ? error.message : String(error)}`);
+        }
+      }
+
+      
   }
   

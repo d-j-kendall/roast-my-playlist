@@ -2,8 +2,11 @@
 import { validateSession, refreshSessionToken } from '../auth/sessionManager'; // Adjust path
 import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
-import { ISpotifyService, SpotifyTasteData } from '../lib/SpotifyService';
-import { RealSpotifyService } from '../lib/RealSpotifyService';
+import { ISpotifyService } from '../lib/music/SpotifyService';
+import { RealSpotifyService } from '../lib/music/RealSpotifyService';
+import { AnalysisInputData } from '../lib/music/AnalysisInput';
+import { Roaster } from '../lib/ai/Roaster';
+import { GeminiRoaster } from '../lib/ai/GeminiRoaster';
 
 export async function GET(request : NextRequest) {
   const sessionId = (await cookies()).get('sessionId')?.value;
@@ -47,33 +50,20 @@ export async function GET(request : NextRequest) {
     }
 }
 
-async function fetchSpotifyData(accessToken: string) : Promise<SpotifyTasteData> { 
+async function fetchSpotifyData(accessToken: string) : Promise<AnalysisInputData> { 
     const spotifyService : ISpotifyService = new RealSpotifyService();
 
-    const tasteData = spotifyService.getCombinedTasteData(accessToken);
+    const tasteData = spotifyService.prepareAnalysisData(accessToken, 20, 20, 40); //Limit Size to Top 20 Tracks, Artists, and Recently Played
     console.log(tasteData);
     return tasteData;
 }
 
-async function generateRoast(data: SpotifyTasteData, roast: boolean) { 
-    const possibleCompliments: string[] = [
-        "Oh, how... *eclectic*. Your taste is certainly... unique. It's wonderful you're not afraid to listen to, well, *that*.",
-        "It's so brave of you to enjoy music that challenges conventional notions of 'good'. Truly inspiring.",
-        "Your playlists have a certain... charm. Like finding a dusty, forgotten cassette tape in your grandpa's attic. Quaint!",
-        "You clearly have a deep appreciation for sounds. All kinds of sounds. Even those ones.",
-        "Wow, you listen to [Popular Artist]? How wonderfully mainstream and accessible of you! It's great you fit in." // Example needs dynamic data later
-      ];
+async function generateRoast(data: AnalysisInputData, roast: boolean) { 
 
-      const randomCompliment: string = possibleCompliments[Math.floor(Math.random() * possibleCompliments.length)];
-
-      const possibleRoasts: string[] = [
-        "Okay, your top artist is *that* obscure indie band? Trying a bit too hard to be different, aren't we? Bet you wear vintage clothes ironically.",
-        "Wow, judging by your recently played, you exclusively listen to songs that were popular 15 years ago. Are you okay? Is this a cry for help?",
-        "Your top genre is 'Sad Acoustic Folk Pop'? Let me guess, your favorite season is autumn and you own way too many plaid shirts.",
-        "All these hyperpop tracks... Is your brain okay? It sounds like a dial-up modem having a seizure in a candy factory.",
-        "Impressive! You managed to have zero overlapping artists with anyone considered 'cool' since 2005. It's almost an achievement."
-      ];
-      const randomRoast: string = possibleRoasts[Math.floor(Math.random() * possibleRoasts.length)];
-
-      return roast ? randomRoast : randomCompliment;
- }
+    const roaster : Roaster = new GeminiRoaster();
+    if (roast) {
+        return roaster.generateRoast(data);
+    } else {
+        return roaster.generateCompliment(data);
+    }
+}
