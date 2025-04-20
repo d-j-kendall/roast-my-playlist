@@ -22,7 +22,7 @@ export class GeminiRoaster implements Roaster {
     const genAI = new GoogleGenerativeAI(apiKey);
     // Using gemini-1.0-pro as gemini-2.0-flash is not a standard model name via this SDK usually
     // Check available models if needed: https://ai.google.dev/models/gemini
-    this.model = genAI.getGenerativeModel({ model: "gemini-1.0-pro-latest" });
+    this.model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
   }
 
   // Updated to accept AnalysisInputData
