@@ -4,6 +4,10 @@ Welcome to Roast My Playlist! This application connects to your Spotify account,
 
 Built with [Next.js](https://nextjs.org), [React](https://react.dev/), [TypeScript](https://www.typescriptlang.org/), and styled with [Tailwind CSS](https://tailwindcss.com/).
 
+_Status: side project (2026) · Next.js 15 / React 19 · TypeScript_
+
+**Live:** [roast-my-playlist.vercel.app](https://roast-my-playlist.vercel.app)
+
 ## Features
 
 *   **Spotify Authentication:** Securely log in using your Spotify account via OAuth 2.0.
@@ -118,4 +122,8 @@ The easiest way to deploy this Next.js app is to use the Vercel Platform.
 3.  **Configure Environment Variables:** Add all the variables from your `.env.local` file (using your production Spotify Redirect URI and production Redis URL if different) to your Vercel project settings.
 4.  Deploy!
 
-Make sure your production `SPOTIFY_REDIRECT_URI` (e.g., `https://your-app-name.vercel.app/api/auth/callback`) is added to your Spotify application settings.
+Make sure your production `SPOTIFY_REDIRECT_URI` (for this deployment, `https://roast-my-playlist.vercel.app/api/auth/callback`) is added to your Spotify application settings.
+
+---
+Built by **Dustin Kendall** — production readiness & rescue for AI-built apps.
+[dustinkendall.com](https://dustinkendall.com) · [LinkedIn](https://www.linkedin.com/in/dustinjkendall)
